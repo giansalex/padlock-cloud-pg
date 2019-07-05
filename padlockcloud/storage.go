@@ -1,11 +1,17 @@
 package padlockcloud
 
-import "reflect"
-import "errors"
-import "encoding/json"
-import "path/filepath"
-import "github.com/syndtr/goleveldb/leveldb"
-import "github.com/syndtr/goleveldb/leveldb/iterator"
+import (
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"path/filepath"
+	"reflect"
+
+	"github.com/lib/pq"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/iterator"
+)
 
 // Error singletons
 var (
@@ -65,6 +71,10 @@ var StorableTypes = map[reflect.Type]string{}
 
 func RegisterStorable(t Storable, loc string) {
 	StorableTypes[typeFromStorable(t)] = loc
+}
+
+func GetRegisterStorable(t Storable) string {
+	return StorableTypes[typeFromStorable(t)]
 }
 
 type LevelDBIterator struct {
@@ -332,6 +342,172 @@ func (s *MemoryStorage) Iterator(t Storable) (StorageIterator, error) {
 
 	var sl [][]byte
 	for _, val := range ts {
+		sl = append(sl, val)
+	}
+
+	return &SliceIterator{
+		s: sl,
+	}, nil
+}
+
+// Postgres implemenation of the `Storage` interface
+type PostgresStorage struct {
+	Config *LevelDBConfig
+	db     *sql.DB
+}
+
+func (s *PostgresStorage) Open() error {
+	db, err := sql.Open("postgres", s.Config.Path)
+	if err != nil {
+		return err
+	}
+	s.db = db
+
+	return nil
+}
+
+func (s *PostgresStorage) Close() error {
+	if err := s.db.Close(); err != nil {
+		return err
+	}
+	s.db = nil
+
+	return nil
+}
+
+func (s *PostgresStorage) Get(t Storable) error {
+	if s.db == nil {
+		return ErrStorageClosed
+	}
+
+	if t == nil {
+		return ErrUnregisteredStorable
+	}
+
+	table := GetRegisterStorable(t)
+	if table == "" {
+		return ErrUnregisteredStorable
+	}
+
+	query := fmt.Sprintf("SELECT value FROM %s WHERE key = $1", pq.QuoteIdentifier(table))
+	var data []byte
+	err := s.db.QueryRow(query, string(t.Key())).Scan(&data)
+	if err == sql.ErrNoRows {
+		return ErrNotFound
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return t.Deserialize(data)
+}
+
+func (s *PostgresStorage) exist(table string, key string) (bool, error) {
+	var count int
+	query := fmt.Sprintf("SELECT COUNT(1) FROM %s WHERE key = $1", pq.QuoteIdentifier(table))
+	err := s.db.QueryRow(query, key).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (s *PostgresStorage) Put(t Storable) error {
+	if s.db == nil {
+		return ErrStorageClosed
+	}
+
+	if t == nil {
+		return ErrUnregisteredStorable
+	}
+
+	table := GetRegisterStorable(t)
+	if table == "" {
+		return ErrUnregisteredStorable
+	}
+
+	data, err := t.Serialize()
+	if err != nil {
+		return err
+	}
+	key := string(t.Key())
+	exist, err := s.exist(table, key)
+	if err != nil {
+		return err
+	}
+
+	var query string
+	quoted := pq.QuoteIdentifier(table)
+	if exist {
+		query = fmt.Sprintf("UPDATE %s SET value = $2 WHERE key = $1", quoted)
+	} else {
+		query = fmt.Sprintf("INSERT INTO %s(key, value) VALUES($1, $2)", quoted)
+	}
+
+	_, err = s.db.Exec(query, key, data)
+
+	return err
+}
+
+func (s *PostgresStorage) Delete(t Storable) error {
+	if s.db == nil {
+		return ErrStorageClosed
+	}
+
+	if t == nil {
+		return ErrUnregisteredStorable
+	}
+
+	table := GetRegisterStorable(t)
+	if table == "" {
+		return ErrUnregisteredStorable
+	}
+
+	query := fmt.Sprintf("DELETE FROM %s WHERE key = $1", pq.QuoteIdentifier(table))
+
+	_, err := s.db.Exec(query, string(t.Key()))
+
+	return err
+}
+
+func (s *PostgresStorage) Ready() bool {
+	return s.db != nil
+}
+
+func (s *PostgresStorage) CanStore(t Storable) bool {
+	return s.Ready() && GetRegisterStorable(t) != ""
+}
+
+func (s *PostgresStorage) Iterator(t Storable) (StorageIterator, error) {
+	if s.db == nil {
+		return nil, ErrStorageClosed
+	}
+
+	if t == nil {
+		return nil, ErrUnregisteredStorable
+	}
+
+	table := GetRegisterStorable(t)
+	if table == "" {
+		return nil, ErrUnregisteredStorable
+	}
+
+	query := fmt.Sprintf("SELECT value FROM %s", pq.QuoteIdentifier(table))
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	var sl [][]byte
+	for rows.Next() {
+		var val []byte
+		err = rows.Scan(&val)
+		if err != nil {
+			return nil, err
+		}
+
 		sl = append(sl, val)
 	}
 

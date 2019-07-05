@@ -40,7 +40,7 @@ type CliApp struct {
 
 func (cliApp *CliApp) InitWithConfig(config *CliConfig) error {
 	cliApp.Config = config
-	cliApp.Storage = &LevelDBStorage{
+	cliApp.Storage = &PostgresStorage{
 		Config: &config.LevelDB,
 	}
 
