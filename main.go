@@ -3,7 +3,7 @@ package main
 import "os"
 import "log"
 
-import "github.com/padlock/padlock-cloud/padlockcloud"
+import "github.com/giansalex/padlock-cloud-pg/padlockcloud"
 
 func main() {
 	err := padlockcloud.NewCliApp().Run(os.Args)

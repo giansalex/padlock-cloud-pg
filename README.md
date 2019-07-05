@@ -195,7 +195,7 @@ First, you'll need to have [Go](https://golang.org/) installed on your system.
 Then simply run
 
 ```sh
-go get github.com/padlock/padlock-cloud
+go get github.com/giansalex/padlock-cloud-pg
 ```
 
 This will download the source code into your `$GOPATH` and automatically build
@@ -275,7 +275,7 @@ emails, web pages etc. These are included in this repository under the `assets`
 folder. When you're running `padlock-cloud` you'll have to make sure that it
 knows where to find these assets. You can do this via the `--assets-path`
 option. By default, the server will look for the templates under
-`$GOPATH/src/github.com/padlock/padlock-cloud/assets/templates` which is
+`$GOPATH/src/github.com/giansalex/padlock-cloud-pg/assets/templates` which is
 where they will usually be if you installed `padlock-cloud` via `go get`.
 
 ### Reference
