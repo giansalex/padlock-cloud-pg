@@ -1,1 +1,1 @@
-web: padlock-cloud
+web: padlock-cloud runserver --port $PORT
