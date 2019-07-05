@@ -1,1 +1,1 @@
-web: padlock-cloud runserver --port $PORT
+web: padlock-cloud --db-path $DATABASE_URL runserver --port $PORT
