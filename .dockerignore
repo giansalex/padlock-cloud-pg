@@ -1,0 +1,15 @@
+# Project files
+Procfile
+.vimrc
+.gitignore
+README.md
+
+# Libraries
+vendor/
+!vendor/vendor.json
+
+# Git
+.git/
+
+# IDE
+.idea/

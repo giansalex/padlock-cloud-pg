@@ -1,0 +1,55 @@
+{{ define "csp" -}}
+    default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; connect-src 'self'; child-src 'self' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'
+{{- end }}
+
+{{ define "css" }}
+    <style>
+        .loading {
+            text-align: center;
+            font-family: sans-serif;
+            font-size: 20px;
+            position: absolute;
+            left:0; right:0; top: 0; bottom: 0;
+            height: 1em;
+            margin: auto;
+        }
+    </style>
+{{ end }}
+
+{{ define "js" }}
+
+    <script>
+        // Support all recent browser versions except IE and Edge
+        var browserSupported = typeof CSS !== "undefined" && CSS.supports("all", "unset");
+
+        if (!browserSupported) {
+            alert("Sorry, but the browser you are using is not supported at this moment. Please download the latest version of Google Chrome, Firefox or Safari!");
+            window.close();
+        }
+    </script>
+
+{{ end }}
+
+{{ define "main" }}
+
+    <div class="loading">Loading Dashboard...</div>
+
+    <pl-cloud-dashboard
+        account='{{ jsonify .account }}'
+        action="{{ .action }}"
+        token='{{ jsonify .token }}'
+        csrf-token="{{ .csrfToken }}"
+        stripe-pub-key="{{ .stripePublicKey }}"
+        referer="{{ .ref }}"
+    ></pl-cloud-dashboard>
+
+    <script>
+      window.customElements = window.customElements || {};
+      window.customElements.forcePolyfill = true;
+      window.ShadyDOM = {force: true};
+    </script>
+
+    <script src="/static/elements/webcomponents-lite.js"></script>
+    <link rel="import" href="/static/elements/cloud-dashboard/cloud-dashboard.html">
+
+{{ end }}

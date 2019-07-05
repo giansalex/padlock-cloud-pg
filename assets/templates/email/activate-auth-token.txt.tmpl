@@ -1,0 +1,25 @@
+{{ define "main" -}}
+{{ if eq .token.Type "web" -}}
+Here is the login link for your account {{ .token.Email }}. Just click the link to log in!
+
+{{ .activation_link }}
+{{- else -}}
+
+You are receiving this email because you requested to pair your Device "{{ .token.Description }}" with the Padlock account "{{ .token.Email }}".
+
+{{- with .code }}
+
+Your login code is: {{ . }}
+
+{{ else }}
+
+To finish the pairing process, please visit the following link:
+
+{{ .activation_link }}
+
+{{ end -}}
+
+WARNING: If you did not request to pair this device with your account, please disregard the previous instructions and contact us at support@padlock.io.
+
+{{- end }}
+{{- end }}
