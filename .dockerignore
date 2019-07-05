@@ -3,6 +3,8 @@ Procfile
 .vimrc
 .gitignore
 README.md
+db/
+logs/
 
 # Libraries
 vendor/

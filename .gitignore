@@ -1,6 +1,9 @@
 #
 padlock-cloud
 db/
+logs/
+vendor/
+!vendor/vendor.json
 
 # IDE
 .idea/
