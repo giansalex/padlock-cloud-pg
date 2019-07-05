@@ -1,4 +1,4 @@
-# Padlock Cloud
+# Padlock Cloud (Postgresql)
 
 ## What is Padlock Cloud
 
@@ -36,6 +36,10 @@ run
 ```sh
 padlock-cloud command --help
 ```
+
+## Postgresql
+
+Execute `schema.sql` in your padlock database.
 
 ## Commands
 
@@ -91,7 +95,7 @@ The precedence for flag value sources is as follows (highest to lowest):
 | `PC_LOG_FILE`        | `--log-file`           | `log.log_file`       | Path to log file                             |
 | `PC_ERR_FILE`        | `--err-file`           | `log.err_file`       | Path to error log file                       |
 | `PC_NOTIFY_ERRORS`   | `--notify-errors`      | `log.notify_errors`  | Email address to send unexpected errors to   |
-| `PC_LEVELDB_PATH`    | `--db-path`            | `leveldb.path`       | Path to LevelDB database                     |
+| `PC_LEVELDB_PATH`    | `--db-path`            | `leveldb.path`       | Path to Postgresql database                     |
 | `PC_EMAIL_SERVER`    | `--email-server`       | `email.server`       | Mail server for sending emails               |
 | `PC_EMAIL_PORT`      | `--email-port`         | `email.port`         | Port to use with mail server                 |
 | `PC_EMAIL_USER`      | `--email-user`         | `email.user`         | Username for authentication with mail server |
@@ -119,7 +123,7 @@ server:
   base_url: https://cloud.padlock.io
   cors: false
 leveldb:
-  path: path/to/db
+  path: "postgres://user:pass@localhost:5432/padlock?sslmode=require&application_name=padlock_cloud",
 email:
   server: smtp.gmail.com
   port: "587"
@@ -132,13 +136,7 @@ log:
   notify_errors: admin@example.com
 ```
 
-## Docker
-[![Docker Build Status](https://img.shields.io/docker/build/padlock/padlock-cloud.svg?style=flat-square)](https://hub.docker.com/r/padlock/padlock-cloud/)
-[![Docker Automated Build](https://img.shields.io/docker/automated/padlock/padlock-cloud.svg?style=flat-square)](https://hub.docker.com/r/padlock/padlock-cloud/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/padlock/padlock-cloud.svg?style=flat-square)](https://hub.docker.com/r/padlock/padlock-cloud/)
-[![Docker Stars](https://img.shields.io/docker/stars/padlock/padlock-cloud.svg?style=flat-square)](https://hub.docker.com/r/padlock/padlock-cloud/)
-
-### Getting Started with Docker
+## Getting Started with Docker
 **NOTE**: As padlock is build upon chrome we need a valid certificate issued
 by a trusted source. For now let us assume we have a certificate named
 `cert.pem` and a key named `key.pem` in the directory `./ssl/`.
@@ -264,7 +262,7 @@ support. In order to enable it, simple use the `cors` option. E.g.:
 padlock-cloud runserver --cors
 ```
 
-**NOTE**: CORS is enabled by default when using the [docker image](#docker).
+**NOTE**: CORS is enabled by default when using the docker image.
 
 ### Failed to load templates
 
@@ -279,3 +277,7 @@ knows where to find these assets. You can do this via the `--assets-path`
 option. By default, the server will look for the templates under
 `$GOPATH/src/github.com/padlock/padlock-cloud/assets/templates` which is
 where they will usually be if you installed `padlock-cloud` via `go get`.
+
+### Reference
+
+[Original Source](https://github.com/padlock/padlock-cloud/)
